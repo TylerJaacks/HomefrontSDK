@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/HomefrontSDK/">
+    <Project Path="SDK/HomefrontSDK.csproj" />
+    <Project Path="Generator/HomefrontSDK.Generator.csproj" />
+    <Project Path="Examples/HelloMod/HelloMod.csproj" />
+  </Folder>
+  <Project Path="../HomefrontBots/HomefrontBots.csproj" />
+</Solution>

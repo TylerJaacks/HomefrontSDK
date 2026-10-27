@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Writes HomefrontSDK\SDK\Generated\*.cs from HomefrontSDK\api-reference.json (made by re/dump_sdk.py). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>HomefrontSDK.Generator</RootNamespace>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The runtime: loaded into the 32-bit game by the native host (HomefrontSDK\Host). Generated\ holds the game
+       classes written by HomefrontSDK.Generator from api-reference.json (not checked in; Build.ps1 makes it). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PlatformTarget>x86</PlatformTarget>
+    <RootNamespace>HomefrontSDK</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- A library the host starts through hostfxr: needs HomefrontSDK.runtimeconfig.json. -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RollForward>LatestMinor</RollForward>
+    <Version>0.1.0</Version>
+    <!-- Generated code: hidden inherited members (overrides of script functions/properties), missing docs. -->
+    <NoWarn>$(NoWarn);CS0108;CS0114;CS1591</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>
