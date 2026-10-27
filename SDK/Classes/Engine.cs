@@ -4,7 +4,7 @@ using HomefrontSDK.Internal;
 namespace HomefrontSDK;
 
 // Hand-written halves of generated classes: helpers over script properties and the engine natives found by
-// reversing (re/README.md).
+// reversing (HomefrontSDK/Tools/README.md).
 
 public partial class Actor
 {

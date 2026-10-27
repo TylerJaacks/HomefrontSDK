@@ -168,7 +168,7 @@ public static unsafe class Hooks
         return false;
     }
 
-    // ---- called by the host through Loader
+    // ---- called by HomefrontModLoader's hook slots, through Internal.Loader
     internal static int Pre(int slot, nint self, nint frame)
     {
         var list = (uint)slot < (uint)slots.Length ? slots[slot] : null;

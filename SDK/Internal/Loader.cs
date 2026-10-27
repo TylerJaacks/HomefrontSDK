@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 
 namespace HomefrontSDK.Internal;
 
-/// <summary>The runtime's entry points, called by the native host.</summary>
+/// <summary>The SDK's entry points, called by HomefrontModLoader (msimg32.dll).</summary>
 public static unsafe class Loader
 {
     static bool running;
 
-    /// <summary>Called once by the host, on the game thread, after the first engine tick.</summary>
+    /// <summary>Called once by the loader, on the game thread, after the first engine tick.</summary>
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     public static int Initialize(NativeApi* native, ManagedApi* managed)
     {
@@ -18,7 +18,7 @@ public static unsafe class Loader
         {
             if (native->ApiVersion != NativeApi.Version || native->Size != sizeof(NativeApi))
             {
-                Fail(native, $"host API {native->ApiVersion}/{native->Size} bytes, runtime expects {NativeApi.Version}/{sizeof(NativeApi)}");
+                Fail(native, $"loader API {native->ApiVersion}/{native->Size} bytes, the SDK expects {NativeApi.Version}/{sizeof(NativeApi)}");
                 return 0;
             }
             Native.Api = native;
@@ -96,7 +96,7 @@ public static unsafe class Loader
         {
             foreach (string w in wrong.GetRange(0, Math.Min(20, wrong.Count)))
                 Native.Log("  " + w);
-            return "the generated bindings don't match this game (regenerate them: re/dump_sdk.py --api, then Build.ps1)";
+            return "the generated bindings don't match this game (regenerate them: HomefrontSDK/Tools/dump_sdk.py --api, then Build.ps1)";
         }
         return null;
     }

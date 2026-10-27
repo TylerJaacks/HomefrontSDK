@@ -426,3 +426,5 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+# HomefrontSDK: dumps written by Tools/dump_sdk.py and Tools/dump_script.py (regenerated from a running server)
+Tools/out/

@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace HomefrontSDK.Internal;
 
-/// <summary>The host's API table (HomefrontSDK/Host/hfsdk_native.h, HFNativeApi). Change both together.</summary>
+/// <summary>The loader's API table (HomefrontModLoader/hfsdk_native.h, HFNativeApi). Change both together.</summary>
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct NativeApi
 {
@@ -24,7 +24,7 @@ public unsafe struct NativeApi
     public int HookSlots;
 }
 
-/// <summary>What the runtime hands back to the host (HFManagedApi).</summary>
+/// <summary>What the SDK hands back to the loader (HFManagedApi).</summary>
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct ManagedApi
 {

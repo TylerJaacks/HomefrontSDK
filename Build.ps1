@@ -1,18 +1,18 @@
 <#
 .SYNOPSIS
-Builds HomefrontSDK (native host, generated bindings, runtime) and its mods (HelloMod, HomefrontBots); optionally
-installs them into the dedicated server.
+Builds HomefrontModLoader (msimg32.dll), HomefrontSDK (generated bindings, HomefrontSDK.dll) and the mods (HelloMod,
+HomefrontBots); optionally installs them into the dedicated server.
 
 .DESCRIPTION
   HomefrontSDK\Build.ps1             build everything
-  HomefrontSDK\Build.ps1 -Install    also install into server\Binaries (stops nothing: the server must not be running)
+  HomefrontSDK\Build.ps1 -Install    also install into Homefront Dedicated Server\Binaries (stops nothing: the server must not be running)
   HomefrontSDK\Build.ps1 -Generate   regenerate the bindings even if api-reference.json hasn't changed
 
 The bindings (HomefrontSDK\SDK\Generated) are generated from HomefrontSDK\api-reference.json when they are
-missing or older than it. Refresh that file from a running server with: python re\dump_sdk.py --api
+missing or older than it. Refresh that file from a running server with: python HomefrontSDK\Tools\dump_sdk.py --api
 
-Installed layout (server\Binaries):
-  msimg32.dll                                   the native host
+Installed layout (Homefront Dedicated Server\Binaries):
+  msimg32.dll                                   HomefrontModLoader: VAC off, bootstrap, hand-off to the SDK
   HomefrontSDK\HomefrontSDK.dll (+ .runtimeconfig.json, .deps.json, .pdb)
   HomefrontSDK\Mods\<Mod>\<Mod>.dll (+ .pdb)    each mod (HelloMod, HomefrontBots)
 #>
@@ -23,10 +23,10 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $sdk = $PSScriptRoot                # this folder, HomefrontSDK
-$root = Split-Path -Parent $sdk     # the project: HomefrontBots and server beside it
+$root = Split-Path -Parent $sdk     # the project: HomefrontBots and "Homefront Dedicated Server" beside it
 $api = Join-Path $sdk 'api-reference.json'
 $generated = Join-Path $sdk 'SDK\Generated'
-$bin = Join-Path $root 'server\Binaries'
+$bin = Join-Path $root 'Homefront Dedicated Server\Binaries'
 
 function Step($text) { Write-Host "== $text" -ForegroundColor Cyan }
 function Run($exe, [string[]]$arguments) {
@@ -34,8 +34,8 @@ function Run($exe, [string[]]$arguments) {
     if ($LASTEXITCODE -ne 0) { throw "$exe $($arguments -join ' ') failed ($LASTEXITCODE)" }
 }
 
-Step 'native host'
-Run 'cmd.exe' @('/c', (Join-Path $sdk 'Host\build.cmd'))
+Step 'HomefrontModLoader'
+Run 'cmd.exe' @('/c', (Join-Path $root 'HomefrontModLoader\build.cmd'))
 
 $registry = Join-Path $generated 'Registry.cs'
 if ($Generate -or -not (Test-Path $registry) -or (Get-Item $api).LastWriteTime -gt (Get-Item $registry).LastWriteTime) {
@@ -54,7 +54,7 @@ $sdkOut = Join-Path $sdk "SDK\bin\$Configuration\net10.0"
 $sdkDir = Join-Path $bin 'HomefrontSDK'
 $modsDir = Join-Path $sdkDir 'Mods'
 New-Item -ItemType Directory -Force $modsDir | Out-Null
-Copy-Item (Join-Path $sdk 'Host\build\msimg32.dll') $bin -Force
+Copy-Item (Join-Path $root 'HomefrontModLoader\build\msimg32.dll') $bin -Force
 foreach ($f in 'HomefrontSDK.dll', 'HomefrontSDK.pdb', 'HomefrontSDK.runtimeconfig.json', 'HomefrontSDK.deps.json') {
     Copy-Item (Join-Path $sdkOut $f) $sdkDir -Force
 }

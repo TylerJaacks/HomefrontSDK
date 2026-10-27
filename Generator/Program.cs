@@ -2,7 +2,7 @@
 //
 // usage: HomefrontSDK.Generator <api-reference.json> <output folder>
 //
-// Input: the reflection dump of the running server (re/dump_sdk.py --api). Output, one file per package plus
+// Input: the reflection dump of the running server (HomefrontSDK/Tools/dump_sdk.py --api). Output, one file per package plus
 // Registry.cs:
 //   - classes: typed properties at their offsets, methods that call the script function through ProcessEvent;
 //   - structs: explicit-layout C# structs (flattened over their super struct);

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace HomefrontSDK.Generator;
 
-// api-reference.json, as re/dump_sdk.py writes it (snake_case keys).
+// api-reference.json, as Tools/dump_sdk.py writes it (snake_case keys).
 
 sealed class Api
 {

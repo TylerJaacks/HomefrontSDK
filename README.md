@@ -3,19 +3,23 @@
 A C# modding SDK for the Homefront dedicated server (`HFDedicated.exe`, 2011-08-10 build, UE3 v576), in the style
 of [BmSDK](https://github.com/Team-BmSDK/BmSDK-AC). Mods are .NET 10 class libraries that see the game's own classes
 (`Pawn`, `PlayerController`, `FL2GameMP`, ...), generated with every script property and function from the
-engine's reflection data. It doesn't depend on Steam or a Steam emulator, and clients stay stock.
+engine's reflection data. Clients stay stock.
+
+[HomefrontModLoader](../HomefrontModLoader/README.md) (`msimg32.dll`) gets it into the server: it turns VAC off,
+starts .NET and hands off to `HomefrontSDK.dll`. Mods such as [HomefrontBots](../HomefrontBots/README.md) build
+against `HomefrontSDK.dll`.
 
 ## Layout
 
 | Path | What |
 |---|---|
-| `Host/` | The native host, C++: built as `msimg32.dll`, starts .NET inside the server |
-| `SDK/` | The runtime, C# (`HomefrontSDK.csproj`, building `HomefrontSDK.dll`): `Framework/` (objects, calls, hooks, scripts), `Classes/` (hand-written helpers), `Internal/` (loader, mods, lifecycle), `Bridge/` (local tool access), `Generated/` (the game classes; made by the build, not checked in) |
+| `SDK/` | The runtime, C# (`HomefrontSDK.csproj`, building `HomefrontSDK.dll`): `Framework/` (objects, calls, hooks, scripts), `Classes/` (hand-written helpers), `Internal/` (loader, mods, lifecycle), `Bridge/` (local tool access), `Generated/` (the game classes, written by the Generator) |
+| `Tools/` | Python tools: `dump_sdk.py` (makes `api-reference.json`), `hfbridge.py`, `hfrcon.py`, the script-bytecode tools, and the engine reference (`Tools/README.md`) |
 | `Generator/` | Writes `SDK/Generated/*.cs` from `api-reference.json` |
 | `api-reference.json` | The server's reflection dump: 3,727 classes, 1,053 structs, 586 enums |
 | `Examples/HelloMod/` | The smallest mod |
 | `Homefront.slnx` | The solution: SDK, generator, HelloMod, [HomefrontBots](../HomefrontBots/README.md) |
-| `Build.ps1` | Builds everything; `-Install` installs into `server\Binaries` |
+| `Build.ps1` | Builds the loader, the SDK and the mods; `-Install` installs into `Homefront Dedicated Server\Binaries` |
 | `Homefront.bat` | Starts the game client for testing on this PC (refuses while real Steam runs) |
 
 ## Build and install
@@ -24,36 +28,32 @@ Needs the .NET 10 SDK, Visual Studio's x86 C++ tools, and on the server machine 
 runtime**. No NuGet packages.
 
 ```
-HomefrontSDK\Build.ps1             build the host, the bindings (when missing or older than api-reference.json), the solution
-HomefrontSDK\Build.ps1 -Install    also install into server\Binaries (stop the server first)
+HomefrontSDK\Build.ps1             build the loader, the bindings (when missing or older than api-reference.json), the solution
+HomefrontSDK\Build.ps1 -Install    also install into Homefront Dedicated Server\Binaries (stop the server first)
 HomefrontSDK\Build.ps1 -Generate   regenerate the bindings
 ```
 
-Installed into `server\Binaries`:
+Installed into `Homefront Dedicated Server\Binaries`:
 
 ```
-msimg32.dll                                  the host
-HomefrontSDK\HomefrontSDK.dll                the runtime (+ .runtimeconfig.json, .deps.json, .pdb)
-HomefrontSDK\HomefrontSDK.log                the host's and runtime's log
+msimg32.dll                                  HomefrontModLoader
+HomefrontSDK\HomefrontSDK.dll                the SDK (+ .runtimeconfig.json, .deps.json, .pdb)
+HomefrontSDK\HomefrontSDK.log                the loader's and SDK's log
 HomefrontSDK\Mods\<Mod>\<Mod>.dll            each mod, with its log <Mod>.log and its data files
 ```
 
-Uninstall: delete `server\Binaries\msimg32.dll`. Disable a mod: move its folder out of `Mods`.
+Uninstall: delete `Homefront Dedicated Server\Binaries\msimg32.dll`. Disable a mod: move its folder out of `Mods`.
 
 ## How it runs
 
-1. **Host** (`Host/host.cpp`). The exe imports `AlphaBlend` from `msimg32.dll`, and msimg32 isn't a KnownDLL, so
-   Windows loads the copy beside the exe; its five exports jump to the real one. A watcher thread waits for
-   `GEngine` (`0x018D10A4`), checks the build (`GCGameEngine` vtable slot `0xFC`, `UEngine::Tick`, holds
-   `0x00B8D370`), and hooks that slot.
-2. On the first engine tick the host finds the 32-bit .NET install (`DOTNET_ROOT(x86)`, the registry, then
-   `Program Files (x86)\dotnet`), loads `hostfxr`, and calls `HomefrontSDK.Internal.Loader.Initialize` with its
-   native API (`Host/hfsdk_native.h`). That API has crash-guarded `ProcessEvent` and native calls, guarded memory
-   reads, and 1024 hook slots.
-3. The runtime checks the engine against the bindings. Every one of the 19,420 generated property offsets is
+1. **HomefrontModLoader** (`msimg32.dll`, [its README](../HomefrontModLoader/README.md)) loads before the server's
+   own code. It turns VAC off and hooks the engine tick. On the first tick it starts .NET and calls
+   `HomefrontSDK.Internal.Loader.Initialize` with its native API (`HomefrontModLoader/hfsdk_native.h`). That API has
+   crash-guarded `ProcessEvent` and native calls, guarded memory reads, and 1024 hook slots.
+2. The SDK checks the engine against the bindings. Every one of the 19,420 generated property offsets is
    compared with the live reflection data, and it refuses to start on any mismatch. Then it installs its own hooks
    (joins, leaves, chat), starts the bridge, and loads every mod in `Mods\`.
-4. Every engine tick: map tracking, the scripts' `OnTick`, the bridge's queued requests, and queued mod reloads. All
+3. Every engine tick: map tracking, the scripts' `OnTick`, the bridge's queued requests, and queued mod reloads. All
    of this runs on the game thread.
 
 ## Writing a mod
@@ -78,7 +78,7 @@ public sealed class Hello : Script
 }
 ```
 
-Install it as `server\Binaries\HomefrontSDK\Mods\<Name>\<Name>.dll`; add it to `Build.ps1`'s `$mods` list to have
+Install it as `Homefront Dedicated Server\Binaries\HomefrontSDK\Mods\<Name>\<Name>.dll`; add it to `Build.ps1`'s `$mods` list to have
 the build do that.
 
 ### Script events
@@ -141,7 +141,7 @@ Use `[Hook("Class", "Function")]` on a script method, or `Hooks.Add(...)`.
 
 `Native.Call(address, this, args)` calls any engine function at a known address. The arguments are 32-bit words,
 and `this` goes in ecx. A crash in the call is caught and thrown as `GameCrashException`. `Native.TryRead` copies
-memory that may be unreadable. Addresses found so far are in `re/README.md`.
+memory that may be unreadable. Addresses found so far are in `Tools/README.md`.
 
 ## Commands and the bridge
 
@@ -167,9 +167,9 @@ Mods add their own with `Bridge.Handle(name, handler)`; HomefrontBots adds `bots
 from a shell:
 
 ```
-python tools\hfbridge.py info
-python tools\hfbridge.py command "!bots add 4"
-python tools\hfbridge.py logs
+python HomefrontSDK\Tools\hfbridge.py info
+python HomefrontSDK\Tools\hfbridge.py command "!bots add 4"
+python HomefrontSDK\Tools\hfbridge.py logs
 ```
 
 ## Regenerating the bindings
@@ -178,7 +178,7 @@ The bindings must match the exe; the startup check enforces that. After any chan
 packages, run the server and do this:
 
 ```
-python re\dump_sdk.py --api        writes HomefrontSDK\api-reference.json from the running server
+python HomefrontSDK\Tools\dump_sdk.py --api   writes HomefrontSDK\api-reference.json from the running server
 HomefrontSDK\Build.ps1 -Install
 ```
 
@@ -188,5 +188,6 @@ HomefrontSDK\Build.ps1 -Install
   to functions point at temporary buffers, which is fine for calls that don't keep them. Strings the engine returns
   are copied and the engine's copy leaks a few bytes.
 - **Maps** (`TMap` properties) can't be read.
-- **Server only.** The client exe isn't a supported build, so in its folder the host only forwards `msimg32`.
-- **No startup without the 32-bit .NET 10 runtime:** the host logs why, and the server runs without mods.
+- **Server only.** The client exe isn't a supported build, so in its folder the loader only forwards `msimg32`.
+- **No startup without the 32-bit .NET 10 runtime:** the loader logs why, and the server runs without mods (VAC
+  stays off either way).

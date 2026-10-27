@@ -4,7 +4,7 @@ using HomefrontSDK.Internal;
 
 namespace HomefrontSDK;
 
-/// <summary>Thrown when game code crashed inside a call the host guarded. The engine may be left inconsistent.</summary>
+/// <summary>Thrown when game code crashed inside a call the loader guarded. The engine may be left inconsistent.</summary>
 public sealed class GameCrashException : Exception
 {
     public uint Code { get; }
@@ -15,7 +15,7 @@ public sealed class GameCrashException : Exception
     }
 }
 
-/// <summary>Calls into the host. Everything here runs on the game thread.</summary>
+/// <summary>Calls into HomefrontModLoader's native API. Everything here runs on the game thread.</summary>
 public static unsafe class Native
 {
     internal static NativeApi* Api;
@@ -23,7 +23,7 @@ public static unsafe class Native
     internal static string BinariesDir = "";
     internal static string SdkDir = "";
 
-    /// <summary>A line in HomefrontSDK.log (the host's log).</summary>
+    /// <summary>A line in HomefrontSDK.log (shared with the loader).</summary>
     public static void Log(string line)
     {
         if (Api == null)

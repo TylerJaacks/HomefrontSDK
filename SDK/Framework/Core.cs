@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace HomefrontSDK;
 
-/// <summary>Engine object layouts of this build (UE3 v576, re/README.md). Offsets past the object header come from
+/// <summary>Engine object layouts of this build (UE3 v576, HomefrontSDK/Tools/README.md). Offsets past the object header come from
 /// the engine's own reflection data.</summary>
 internal static class Layout
 {
