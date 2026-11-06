@@ -8,13 +8,39 @@ SHA-1 of AdminPassword (from the profile's DedicatedPlaylist) as uppercase hex b
 spaces, e.g. "60 37 4A ...". Commands the launcher uses: "admin NextMap", "admin kick \"name\"",
 "RETRIEVE PLAYERLIST", ...
 
-usage: python hfrcon.py [--host 127.0.0.1] [--port 27010] [--password PLAINTEXT] [--wait 5] [command ...]
+usage: python hfrcon.py [--host ADDRESS] [--port 27010] [--password PLAINTEXT] [--wait 5] [command ...]
+  --host       default: this PC's internet-facing address (a server started with -MULTIHOME listens only there)
+  --password   default: AdminPassword from the server's DedicatedPlaylist
 """
 import argparse
 import hashlib
+import os
 import socket
 import struct
 import time
+
+PLAYLIST = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                        "Homefront Dedicated Server", "GCGame", "Config", "DedicatedProfile_DefaultProfile",
+                        "DedicatedPlaylist")
+
+
+def internet_address():
+    """This PC's address on the network that reaches the internet (a UDP connect sends nothing)."""
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.connect(("8.8.8.8", 53))
+        return s.getsockname()[0]
+
+
+def playlist_password():
+    """AdminPassword from the server's DedicatedPlaylist, or None."""
+    try:
+        with open(PLAYLIST, encoding="latin-1") as f:
+            for line in f:
+                if line.startswith("AdminPassword="):
+                    return line.split("=", 1)[1].strip() or None
+    except OSError:
+        pass
+    return None
 
 
 def send(sock, text, mtype=b"CT"):
@@ -55,7 +81,7 @@ def read_messages(sock, wait, until=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("--host")
     ap.add_argument("--port", type=int, default=27010)
     ap.add_argument("--password")
     ap.add_argument("--wait", type=float, default=5.0)
@@ -63,6 +89,10 @@ def main():
                     "printing server events (LOGIN:, CHANGE LEVEL:, KILL:, ...) and pinging like the launcher")
     ap.add_argument("commands", nargs="*")
     args = ap.parse_args()
+    if args.host is None:
+        args.host = internet_address()
+    if args.password is None:
+        args.password = playlist_password()
 
     with socket.create_connection((args.host, args.port), timeout=5) as sock:
         # The server closes the connection if PASS doesn't follow HELLO within a few seconds.

@@ -17,7 +17,7 @@ internal static class Layout
     public const int PropertyArrayDim = 0x40, PropertyElementSize = 0x44, PropertyFlags = 0x48, PropertyOffset = 0x60,
         PropertyExtra0 = 0x80;
     // UFunction
-    public const int FunctionFlags = 0x8C, FunctionParmsSize = 0x9E, FunctionReturnOffset = 0xA0;
+    public const int FunctionFlags = 0x8C, FunctionNative = 0x90, FunctionParmsSize = 0x9E, FunctionReturnOffset = 0xA0;
     // FStateFrame: FFrame, then StateNode
     public const int StateFrameNode = 0x28;
     // FFrame

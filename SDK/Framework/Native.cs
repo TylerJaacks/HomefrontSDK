@@ -40,8 +40,23 @@ public static unsafe class Native
     /// parameter block <paramref name="parms"/> (the function's ParmsSize bytes; out values are copied back).</summary>
     public static void ProcessEvent(nint obj, nint function, void* parms)
     {
+        // ProcessEvent silently skips a function with a native index (UFunction.iNative, e.g. GotoState = 113,
+        // SetPhysics = 3970): script calls those through GNatives instead. Their bodies load the parameters like
+        // any native's (EX_NativeParm per parameter), so with the index cleared for the call they run normally.
+        ushort* index = (ushort*)(function + Layout.FunctionNative);
+        ushort saved = *index;
+        *index = 0;
         uint code;
-        if (Api->ProcessEvent(obj, function, parms, &code) == 0)
+        int ok;
+        try
+        {
+            ok = Api->ProcessEvent(obj, function, parms, &code);
+        }
+        finally
+        {
+            *index = saved;
+        }
+        if (ok == 0)
             throw new GameCrashException(code, $"ProcessEvent({Names.ObjectFullName(function)})");
     }
 

@@ -18,4 +18,13 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <!-- The NuGet package mods build against, published to GitHub Packages by .github/workflows/build.yml on a v* tag. -->
+  <PropertyGroup>
+    <PackageId>HomefrontSDK</PackageId>
+    <Authors>TylerJaacks</Authors>
+    <Description>C# modding SDK for the Homefront dedicated server. Reference with ExcludeAssets="runtime": the game already has the SDK loaded.</Description>
+    <RepositoryUrl>https://github.com/TylerJaacks/HomefrontSDK</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
 </Project>

@@ -20,7 +20,6 @@ against `HomefrontSDK.dll`.
 | `Examples/HelloMod/` | The smallest mod |
 | `Homefront.slnx` | The solution: SDK, generator, HelloMod, [HomefrontBots](../HomefrontBots/README.md) |
 | `Build.ps1` | Builds the loader, the SDK and the mods; `-Install` installs into `Homefront Dedicated Server\Binaries` |
-| `Homefront.bat` | Starts the game client for testing on this PC (refuses while real Steam runs) |
 
 ## Build and install
 
@@ -44,6 +43,18 @@ HomefrontSDK\Mods\<Mod>\<Mod>.dll            each mod, with its log <Mod>.log an
 
 Uninstall: delete `Homefront Dedicated Server\Binaries\msimg32.dll`. Disable a mod: move its folder out of `Mods`.
 
+Running the server on Steam (anonymous game server; Steam itself may be running or not):
+
+```
+HFDedicated.exe SERVER ?maxplayers=32 -queryport=27015 -authport=8766 -rconport1=27010 -rconport2=27011 -configsubdir=DedicatedProfile_DefaultProfile -MULTIHOME=<this PC's address> -ALLOWMULTIPLE
+```
+
+- `-MULTIHOME=` is needed on a PC with virtual network adapters (VMware, Hyper-V). Without it the server can bind to
+  a host-only adapter, and its Steam logon never gets out. The admin (RCON) port then listens on that address only.
+- The server's 2011 `steamclient.dll`, `tier0_s.dll` and `vstdlib_s.dll` only know Steam servers that no longer
+  exist. Use current ones, as SteamCMD would install them (here copied from the Steam install; the old ones are kept
+  as `*.2011`). `steamclient.dll` logs its connection attempts to `Binaries\logs\connection_log_27015.txt`.
+
 ## How it runs
 
 1. **HomefrontModLoader** (`msimg32.dll`, [its README](../HomefrontModLoader/README.md)) loads before the server's
@@ -59,7 +70,9 @@ Uninstall: delete `Homefront Dedicated Server\Binaries\msimg32.dll`. Disable a m
 ## Writing a mod
 
 A mod is a class library referencing `HomefrontSDK\SDK\HomefrontSDK.csproj` (with `Private="false"`: the game already
-has the SDK loaded), with one or more `[Script]` classes. `Examples/HelloMod` is a template:
+has the SDK loaded), with one or more `[Script]` classes. Outside this repository, reference the `HomefrontSDK`
+package from GitHub Packages (`https://nuget.pkg.github.com/TylerJaacks/index.json`) with `ExcludeAssets="runtime"`
+instead, as [HomefrontBots](../HomefrontBots/README.md) does. A `v*` tag (`v0.2.0`) publishes that version. `Examples/HelloMod` is a template:
 
 ```csharp
 using HomefrontSDK;
@@ -112,6 +125,8 @@ Generated per package into `HomefrontSDK` (namespace `HomefrontSDK`).
   - Non-final functions are looked up on the object (state first, then class), so overrides run.
   - `out` parameters are `ref` (`out string` for strings).
   - Optional parameters have defaults.
+  - Numbered natives (`native(113) GotoState`, `SetPhysics`, ...) work too. The engine's `ProcessEvent` skips any
+    function with a native index (`UFunction.iNative`, +0x90), so `Native.ProcessEvent` clears it for the call.
   - Iterators, latent functions, operators and delegates aren't generated.
 - **Hand-written helpers** in `Classes/`:
   - `FVector` maths;
@@ -146,7 +161,9 @@ memory that may be unreadable. Addresses found so far are in `Tools/README.md`.
 ## Commands and the bridge
 
 Chat lines starting with `!name` run a registered command and stay out of chat. The SDK's own command is
-`!sdk status | mods | reload [mod] | hooks`.
+`!sdk status | mods | reload [mod] | hooks | travel <map>[?GameMode=FL|TDM]`. `travel` changes the map
+(`WorldInfo.ServerTravel`) and only runs for tools and logged-in admins; any player can use the others, and the
+mods' commands.
 
 The bridge is a loopback TCP server on `127.0.0.1:27040` (or `HFSDK_BRIDGE_PORT`) for local tools. Its protocol is
 JSON lines: send `{"id":1,"cmd":"..."}` and get back `{"id":1,"ok":true,"result":...}`. Requests run on the game

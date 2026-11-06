@@ -38,7 +38,7 @@ internal static unsafe class Lifecycle
         Hooks.Add("PlayerController", "ServerSay", (self, frame) =>
             self is not PlayerController pc || !Commands.TryRun(pc, frame.String("msg")), null, null);
 
-        Commands.Add("sdk", "!sdk [status | mods | reload [mod] | hooks]", null, SdkCommand);
+        Commands.Add("sdk", "!sdk [status | mods | reload [mod] | hooks | travel <map>]", null, SdkCommand);
     }
 
     public static void Tick(float delta)
@@ -116,6 +116,25 @@ internal static unsafe class Lifecycle
             case "hooks":
                 ctx.Reply($"[sdk] {Hooks.Count} hooks");
                 break;
+            case "travel":
+            {
+                // Changing the map is for tools (the bridge) and logged-in admins, not every player in chat.
+                if (ctx.Player != null && ctx.Player.PlayerReplicationInfo?.bAdmin != true)
+                {
+                    ctx.Reply("[sdk] travel is for admins");
+                    break;
+                }
+                string url = ctx.Arg(1);
+                if (url.Length == 0 || Game.WorldInfo is not WorldInfo info)
+                {
+                    ctx.Reply(url.Length == 0 ? "[sdk] travel <map>[?GameMode=FL|TDM]" : "[sdk] no map running");
+                    break;
+                }
+                Native.Log($"travel to {url}");
+                info.ServerTravel(url);
+                ctx.Reply($"[sdk] travelling to {url}");
+                break;
+            }
             default:
                 ctx.Reply("[sdk] " + Commands.Help("sdk"));
                 break;

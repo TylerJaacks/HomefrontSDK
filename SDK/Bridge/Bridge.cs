@@ -172,15 +172,19 @@ public static class Bridge
         for (int n = 0; n < MaxRequestsPerTick && requests.TryDequeue(out var item); ++n)
         {
             var (client, request) = item;
-            JsonNode? id = request["id"]?.DeepClone();
             JsonObject answer;
             try
             {
-                answer = new JsonObject { ["id"] = id, ["ok"] = true, ["result"] = Run(client, request) };
+                JsonNode? result = Run(client, request);
+                if (result?.Parent != null)
+                    result = result.DeepClone();  // a node can only sit in one tree
+                answer = new JsonObject { ["id"] = request["id"]?.DeepClone(), ["ok"] = true, ["result"] = result };
             }
             catch (Exception e)
             {
-                answer = new JsonObject { ["id"] = id, ["ok"] = false, ["error"] = e.Message };
+                // A fresh id: the failed answer may already hold the first copy.
+                answer = new JsonObject { ["id"] = request["id"]?.DeepClone(), ["ok"] = false, ["error"] = $"{e.GetType().Name}: {e.Message}" };
+                Native.Log($"bridge: {request["cmd"]} failed: {e}");
             }
             client.Send(answer.ToJsonString());
         }

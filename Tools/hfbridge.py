@@ -36,7 +36,7 @@ def main():
     cmd = sys.argv[1]
     args = {}
     rest = sys.argv[2:]
-    if cmd == "command" and rest and "=" not in rest[0]:
+    if cmd == "command" and rest and not rest[0].startswith("line="):  # the line itself may hold "=" (?GameMode=FL)
         args["line"] = " ".join(rest)
         rest = []
     for a in rest:
