@@ -43,7 +43,7 @@ jobs:
         path: out/*
     - name: Publish to GitHub Packages
       if: github.ref_type == 'tag'
-      run: dotnet nuget push "out/*.nupkg" --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key "${{ secrets.GITHUB_TOKEN }}"
+      run: dotnet nuget push (Get-ChildItem out/*.nupkg).FullName --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key "${{ secrets.GITHUB_TOKEN }}"
     - name: GitHub Release
       if: github.ref_type == 'tag'
       env:
