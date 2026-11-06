@@ -1,4 +1,4 @@
-# Builds the SDK, the generator and HelloMod (Homefront.slnx) and packs the HomefrontSDK NuGet package. A v* tag
+# Builds the SDK, the generator and HelloMod (HomefrontSDK.slnx) and packs the HomefrontSDK NuGet package. A v* tag
 # (v0.2.0) builds with that version, publishes the package to GitHub Packages (mods build against it) and makes a
 # GitHub Release with HomefrontSDK-<tag>.zip (HomefrontSDK\, to extract into the server's Binaries folder).
 name: Build
@@ -28,7 +28,7 @@ jobs:
       if: github.ref_type == 'tag'
       run: "\"VERSION_ARG=-p:Version=$($env:GITHUB_REF_NAME.TrimStart('v'))\" >> $env:GITHUB_ENV"
     - name: Build
-      run: dotnet build Homefront.slnx -c Release -nologo $env:VERSION_ARG
+      run: dotnet build HomefrontSDK.slnx -c Release -nologo $env:VERSION_ARG
     - name: Pack
       run: dotnet pack SDK/HomefrontSDK.csproj -c Release -nologo --no-build -o out $env:VERSION_ARG
     - name: Zip the install folder

@@ -18,7 +18,7 @@ against `HomefrontSDK.dll`.
 | `Generator/` | Writes `SDK/Generated/*.cs` from `api-reference.json` |
 | `api-reference.json` | The server's reflection dump: 3,727 classes, 1,053 structs, 586 enums |
 | `Examples/HelloMod/` | The smallest mod |
-| `Homefront.slnx` | The solution: SDK, generator, HelloMod, [HomefrontBots](../HomefrontBots/README.md) |
+| `HomefrontSDK.slnx` | The solution: SDK, generator, HelloMod, [HomefrontBots](../HomefrontBots/README.md) |
 | `Build.ps1` | Builds the loader, the SDK and the mods; `-Install` installs into `Homefront Dedicated Server\Binaries` |
 
 ## Build and install

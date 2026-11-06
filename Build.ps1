@@ -44,7 +44,7 @@ if ($Generate -or -not (Test-Path $registry) -or (Get-Item $api).LastWriteTime -
 }
 
 Step 'managed projects'
-Run 'dotnet' @('build', (Join-Path $sdk 'Homefront.slnx'), '-c', $Configuration, '-v', 'minimal', '-nologo')
+Run 'dotnet' @('build', (Join-Path $sdk 'HomefrontSDK.slnx'), '-c', $Configuration, '-v', 'minimal', '-nologo')
 
 if (-not $Install) { return }
 
